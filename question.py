@@ -11,6 +11,7 @@ class Question:
     def __init__(self, question):
         self.question = question
         self.answer = None
+        self.subqs = []
         logging.info(f"{Fore.MAGENTA}Initialized Question: '{self.question}'{Style.RESET_ALL}")
 
     def is_atomic(self):
@@ -23,7 +24,7 @@ class Question:
         logging.info(f"{Fore.CYAN}Retrieved sub-questions for '{self.question}': {sub_questions}{Style.RESET_ALL}")
         return sub_questions
 
-    def get_answer(self, depth=0, max_depth=5):
+    def get_answer(self, depth=0, max_depth=4):
         logging.info(f"{Fore.BLUE}Answering question: '{self.question}' at depth {depth}{Style.RESET_ALL}")
         if depth >= max_depth:
             logging.warning(f"{Fore.RED}Max depth {max_depth} reached. Forcing direct answer for question '{self.question}'.{Style.RESET_ALL}")
@@ -37,14 +38,17 @@ class Question:
         if self.is_atomic():
             logging.info(f"{Fore.GREEN}Question '{self.question}' is atomic. Obtaining base answer.{Style.RESET_ALL}")
             self.answer = GPT.answer_atomic(self.question)
+            self.subqs = []
         else:
             subquestions = self.get_sub_questions()
+            self.subqs = []
             logging.info(f"{Fore.YELLOW}Question '{self.question}' is not atomic. Subquestions: {subquestions}{Style.RESET_ALL}")
             context_answers = []
             for question in subquestions:
                 logging.info(f"{Fore.BLUE}Answering sub-question: '{question}' at depth {depth + 1}{Style.RESET_ALL}")
                 subquestion = Question(question)
                 subquestion.get_answer(depth + 1, max_depth)
+                self.subqs.append(subquestion)
                 context_answers.append(subquestion)
                 logging.info(f"{Fore.BLUE}Answered sub-question: '{question}' with answer: '{subquestion.answer}' at depth {depth + 1}{Style.RESET_ALL}")
             self.answer = GPT.answer_question(self.question, context_answers)

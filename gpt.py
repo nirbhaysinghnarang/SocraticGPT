@@ -17,7 +17,8 @@ class GPT:
         to which will aid in constructing the answers to
         the following question. Make sure the answers
         have no semantic or historical overlap with the following question:{query}.
-        Return your answer as a JSON list with the key `sub_questions`
+        Return your answer as a JSON list with the key `sub_questions`.
+        Sort these questions in order of relevance to the original question.
         """)
         prediction= cls.LLM.predict(prompt.format(deflt=cls.DEFAULT_SYSTEM_PROMPT, query=query))
         return list(json.loads(prediction)["sub_questions"])[:2]
@@ -48,11 +49,16 @@ class GPT:
         {question}
         """)
 
+    
+        
         answered_sub_qs_string = ""
         for q in answered_sub_qs:
             answered_sub_qs_string += (q.question + ":" + q.answer + "\n")
 
+
         formatted = prompt.format(deflt=cls.DEFAULT_SYSTEM_PROMPT, answered_sub_qs=answered_sub_qs_string, question=question)
+        print("\n\n\n"+formatted+"\n\n\n")
+
         return cls.LLM.predict(formatted)
 
         
